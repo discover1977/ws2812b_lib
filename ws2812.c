@@ -12,21 +12,33 @@
 #include <avr/interrupt.h>
 #include "ws2812.h"
 
-void WS2812Init()
+
+/** The rgb_color struct represents the color for an 8-bit RGB LED.
+    Examples:
+      Black:      (rgb_color){ 0, 0, 0 }
+      Pure red:   (rgb_color){ 255, 0, 0 }
+      Pure green: (rgb_color){ 0, 255, 0 }
+      Pure blue:  (rgb_color){ 0, 0, 255 }
+      White:      (rgb_color){ 255, 255, 255} */
+typedef struct rgb_color
 {
-	LED_STRIP_DDR |= ( 1 << LED_STRIP_PIN );
-}
+  unsigned char red, green, blue;
+} rgb_color;
+
+#define LED_COUNT 30
+rgb_color colors[LED_COUNT];
+#define RAND_MAX	LED_COUNT
 
 void WS2812Clear()
 {
 	for (int i = 0; i < LED_COUNT; i++) {
-		Colors[i] = (rgb_color){0, 0, 0};
+		colors[i] = (rgb_color){0, 0, 0};
 	}
 }
 
 void WS2812SetRGB(uint8_t led, uint8_t r, uint8_t g, uint8_t b )
 {
-	Colors[led] = (rgb_color){ r, g, b };
+	colors[led] = (rgb_color){ r, g, b };
 }
 
 void WS2812SetHSV(uint16_t led, uint16_t hue, uint16_t saturation, uint16_t value)
@@ -38,7 +50,7 @@ void WS2812SetHSV(uint16_t led, uint16_t hue, uint16_t saturation, uint16_t valu
 
 		if(saturation == 0)
 		{
-			Colors[led] = (rgb_color){value, value, value};
+			colors[led] = (rgb_color){value, value, value};
 			return;
 		}
 
@@ -84,7 +96,7 @@ void WS2812SetHSV(uint16_t led, uint16_t hue, uint16_t saturation, uint16_t valu
 			blue = dec;
 			break;
 		}
-		Colors[led] = (rgb_color){red, green, blue};
+		colors[led] = (rgb_color){red, green, blue};
 	}
 }
 
@@ -101,7 +113,7 @@ void WS2812SetHSV(uint16_t led, uint16_t hue, uint16_t saturation, uint16_t valu
   1 pulse  = 850 ns
   "period" = 1300 ns
  */
-void __attribute__((noinline)) WS2812Write(rgb_color * colors, unsigned int count)
+void __attribute__((noinline)) led_strip_write(rgb_color * colors, unsigned int count) 
 {
   // Set the pin to be an output driving low.
   LED_STRIP_PORT &= ~(1<<LED_STRIP_PIN);
@@ -173,8 +185,8 @@ void __attribute__((noinline)) WS2812Write(rgb_color * colors, unsigned int coun
 
         "ret\n"
         "led_strip_asm_end%=: "
-        : "=b" (Colors)
-        : "0" (Colors),         // %a0 points to the next color to display
+        : "=b" (colors)
+        : "0" (colors),         // %a0 points to the next color to display
           "I" (_SFR_IO_ADDR(LED_STRIP_PORT)),   // %2 is the port register (e.g. PORTC)
           "I" (LED_STRIP_PIN)     // %3 is the pin number (0-8)
     );
