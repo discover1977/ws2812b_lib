@@ -7,18 +7,11 @@
    This code supports 20 MHz, 16 MHz and 8MHz */
 //#define F_CPU 20000000
 
-// These lines specify what pin the LED strip is on.
-// You will either need to attach the LED strip's data line to PC0 or change these
-// lines to specify a different pin.
-#define LED_STRIP_PORT PORTC
-#define LED_STRIP_DDR  DDRC
-#define LED_STRIP_PIN  0
-
 #include <avr/io.h>
-#include <avr/interrupt.h>
 #include <util/delay.h>
-#include <stdlib.h>
-#include "bits_macros.h"
+#include <avr/interrupt.h>
+#include "ws2812.h"
+
 
 /** The rgb_color struct represents the color for an 8-bit RGB LED.
     Examples:
@@ -36,7 +29,7 @@ typedef struct rgb_color
 rgb_color colors[LED_COUNT];
 #define RAND_MAX	LED_COUNT
 
-WS2812Clear()
+void WS2812Clear()
 {
 	for (int i = 0; i < LED_COUNT; i++) {
 		colors[i] = (rgb_color){0, 0, 0};
@@ -203,156 +196,4 @@ void __attribute__((noinline)) led_strip_write(rgb_color * colors, unsigned int 
   }
   sei();          // Re-enable interrupts now that we are done.
   _delay_us(50);  // Hold the line low for 15 microseconds to send the reset signal.
-}
-
-int main()
-{
-	unsigned int time = 0;
-	int effect = 4;
-
-	SetBit(DDRC, 1);
-	ClearBit(PORTC, 1);
-
-	SetBit(PORTD, 2);
-
-	while(1)
-	{
-		if (BitIsClear(PIND, 2)) {
-			while(BitIsClear(PIND, 2));
-			if ( ++effect == 8 ) effect = 0;
-		}
-
-		switch(effect)
-				{
-				case 0:;
-					for(char j = 0; j < LED_COUNT; j++)
-					{
-						for(char i = 0; i < LED_COUNT; i++)
-						{
-							if (i==j) WS2812SetHSV(i, i*(1535/LED_COUNT+1), 255, 255);
-							else {
-								WS2812SetRGB(i, 0, 0, 0);
-							}
-						}
-						led_strip_write(colors, LED_COUNT);
-						_delay_ms(25);
-					}
-					break;
-				case 1:;
-					for(char l = 0; l < 2; l++)
-					{
-						for(char k = 0; k < 3; k++)
-						{
-							for(char j = 0; j < 8; j++)
-							{
-								for(char i = 0; i < LED_COUNT; i++)
-								{
-									if (j == 1 && i < (( l + 1 ) * LED_COUNT / 2) && i >= (l * LED_COUNT / 2) ) {
-										WS2812SetRGB(i, (l == 0)?(255):(0), 0, (l == 1)?(255):(0));
-									}
-									else WS2812SetRGB(i, 0, 0, 0);
-								}
-								led_strip_write(colors, LED_COUNT);
-								_delay_ms(5);
-							}
-						}
-						_delay_ms(100);
-					}
-					break;
-				case 2:;
-					uint8_t level = 0;
-					for(char l = 0; l < 2; l++)
-					{
-						for(char j = 0; j < LED_COUNT; j++)
-						{
-							for(char i = 0; i < LED_COUNT; i++)
-							{
-								if (i==j) level = 255;
-								else if ((i + 1 == j) || (i - 1 == j)) level = 127;
-								else if ((i + 2 == j) || (i - 2 == j)) level = 63;
-								else if ((i + 3 == j) || (i - 3 == j)) level = 31;
-								else level = 0;
-
-								if (l) WS2812SetRGB(i, level, 0, 0);
-								else WS2812SetRGB(LED_COUNT-i, level, 0, 0);
-							}
-							led_strip_write(colors, LED_COUNT);
-							_delay_ms(40);
-						}
-					}
-					break;
-				case 3:;
-					uint16_t df = (RAND_MAX / LED_COUNT + 1);
-					for(uint8_t j = 0; j < 10; j++)
-					{
-						WS2812Clear();
-						for(uint8_t i = 0; i < LED_COUNT / 5; i++)
-						{
-							WS2812SetRGB(rand() / df, rand() * 5, rand() * 5, rand() * 5);
-						}
-						led_strip_write(colors, LED_COUNT);
-						_delay_ms(25);
-					}
-					break;
-				case 4:;
-					uint16_t steps = (1535/LED_COUNT+1);
-					for(char j = 0; j<LED_COUNT; j++)
-					{
-						for(char i = 0; i<LED_COUNT; i++)
-						{
-							WS2812SetHSV(i, (steps*i+steps*j)%1535, 255, 50);
-						}
-						led_strip_write(colors, LED_COUNT);
-						_delay_ms(40);
-					}
-					break;
-				case 5:;
-					for(char j = 0; j<2; j++)
-					{
-						for(char i = 0; i<LED_COUNT; i++)
-						{
-							WS2812SetRGB(i, 0, 255, 0);
-						}
-						led_strip_write(colors, LED_COUNT);
-						_delay_ms(5);
-						WS2812Clear();
-						led_strip_write(colors, LED_COUNT);
-						_delay_ms(75);
-					}
-					_delay_ms(250);
-					break;
-				case 6:;
-					for(char j = 0; j < 4; j++)
-					{
-						WS2812Clear();
-						for(char i = 0; i<LED_COUNT/2; i++)
-						{
-							if (i%4 == j)
-							{
-								WS2812SetRGB(i, 255, 127, 0);
-								WS2812SetRGB(LED_COUNT - i -1, 255, 127, 0);
-							}
-						}
-						led_strip_write(colors, LED_COUNT);
-						_delay_ms(50);
-					}
-					break;
-				case 7:;
-					for(char j = 0; j < 2; j++)
-					{
-						for(char i = 0; i < LED_COUNT; i++)
-						{
-							WS2812SetRGB(i, 255, 255, 255);
-						}
-						led_strip_write(colors, LED_COUNT);
-						_delay_ms(3);
-						WS2812Clear();
-						led_strip_write(colors, LED_COUNT);
-						_delay_ms(100);
-					}
-					break;
-				default:;
-					effect = 0;
-				}
-	}
 }
