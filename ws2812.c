@@ -12,22 +12,10 @@
 #include <avr/interrupt.h>
 #include "ws2812.h"
 
-
-/** The rgb_color struct represents the color for an 8-bit RGB LED.
-    Examples:
-      Black:      (rgb_color){ 0, 0, 0 }
-      Pure red:   (rgb_color){ 255, 0, 0 }
-      Pure green: (rgb_color){ 0, 255, 0 }
-      Pure blue:  (rgb_color){ 0, 0, 255 }
-      White:      (rgb_color){ 255, 255, 255} */
-typedef struct rgb_color
+void WS2812Init()
 {
-  unsigned char red, green, blue;
-} rgb_color;
-
-#define LED_COUNT 30
-rgb_color colors[LED_COUNT];
-#define RAND_MAX	LED_COUNT
+	LED_STRIP_DDR |= (1 << LED_STRIP_PIN);
+}
 
 void WS2812Clear()
 {
@@ -113,7 +101,7 @@ void WS2812SetHSV(uint16_t led, uint16_t hue, uint16_t saturation, uint16_t valu
   1 pulse  = 850 ns
   "period" = 1300 ns
  */
-void __attribute__((noinline)) led_strip_write(rgb_color * colors, unsigned int count) 
+void __attribute__((noinline)) WS2812Write(rgb_color * colors, unsigned int count)
 {
   // Set the pin to be an output driving low.
   LED_STRIP_PORT &= ~(1<<LED_STRIP_PIN);

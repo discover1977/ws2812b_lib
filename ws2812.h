@@ -30,7 +30,7 @@ typedef struct rgb_color
   unsigned char red, green, blue;
 } rgb_color;
 
-rgb_color Colors[LED_COUNT];
+rgb_color colors[LED_COUNT];
 
 /* Users functions */
 void WS2812Init();
