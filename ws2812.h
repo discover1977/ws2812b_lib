@@ -8,14 +8,14 @@
 #ifndef WS2812B_WS2812_H_
 #define WS2812B_WS2812_H_
 
-#define LED_COUNT 30
+#define LED_COUNT 6
 #define RAND_MAX	LED_COUNT
 
 // These lines specify what pin the LED strip is on.
 // You will either need to attach the LED strip's data line to PC0 or change these
 // lines to specify a different pin.
-#define LED_STRIP_PORT PORTA
-#define LED_STRIP_DDR  DDRA
+#define LED_STRIP_PORT PORTB
+#define LED_STRIP_DDR  DDRB
 #define LED_STRIP_PIN  0
 
 /** The rgb_color struct represents the color for an 8-bit RGB LED.
